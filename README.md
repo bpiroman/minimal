@@ -2,12 +2,15 @@
 minimal static website template generator using Go
 v0.2.1 realeased
 
+
 ## Install
 
 Requires Go 1.17+.
 
 ```bash
 go install github.com/bpiroman/minimal@latest
+
+go install github.com/you/minimal@v0.2.1
 ```
 
 
