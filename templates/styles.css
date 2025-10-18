@@ -1,0 +1,42 @@
+:root {
+  --color-slate-700: oklch(37.2% 0.044 257.287);
+}
+@supports (font-variation-settings: normal) {
+  :root { font-family: InterVariable, sans-serif; }
+}
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+h1 {
+  font-weight: 800;
+  margin-bottom: 0;
+}
+p {
+  color: var(--color-slate-700);
+}
+img,
+svg,
+video {
+  max-width: 100%;
+  display: block;
+}
+main {
+  max-width: min(70ch, 100% - 0.5rem);
+  margin-inline: auto;
+}
+@media (min-width: 640px) {
+  main {
+    max-width: min(70ch, 100% - 4rem);
+  }
+}
+/* testing out table styles */
+table {
+  width: 100%;
+}
+table th {
+  text-align: left;
+}

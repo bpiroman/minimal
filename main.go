@@ -1,53 +1,67 @@
 package main
 
 import (
-	"flag"
+	"embed"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 )
 
-// version will be set at build time with -ldflags "-X main.version=...".
-// Default is "dev" for local builds.
-var version = "dev"
+var templates embed.FS
 
-func usage() {
-	prog := filepath.Base(os.Args[0])
-	fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [options] arg1 arg2 ...\n\n", prog)
-	fmt.Fprintln(flag.CommandLine.Output(), "Options:")
-	flag.PrintDefaults()
+// createDir creates a directory if it doesn't exist
+func createDir(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			return fmt.Errorf("failed to create %s: %w", path, err)
+		}
+		fmt.Printf("📁 Created directory: %s\n", path)
+	} else {
+		fmt.Printf("⚠️  Directory %s already exists, skipping.\n", path)
+	}
+	return nil
+}
+
+func writeFileIfNotExists(name string, content []byte) error {
+	if _, err := os.Stat(name); err == nil {
+		fmt.Printf("⚠️  %s already exists, skipping.\n", filepath.Base(name))
+		return nil
+	}
+	if err := os.WriteFile(name, content, 0o644); err != nil {
+		return fmt.Errorf("error writing %s: %w", name, err)
+	}
+	fmt.Printf("✅ Created %s\n", filepath.Base(name))
+	return nil
 }
 
 func main() {
-	// Define flags
-	showVersion := flag.Bool("version", false, "Print version and exit")
-	help := flag.Bool("help", false, "Show help")
-
-	// Example flag
-	repeat := flag.Int("n", 1, "how many times to print the args")
-
-	flag.Usage = usage
-	flag.Parse()
-
-	if *help {
-		flag.Usage()
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("error getting current working director:", err)
 		return
 	}
+	log.Println(cwd)
 
-	if *showVersion {
-		fmt.Println(version)
-		return
+	fmt.Println("🚀 Creating minimal Go web template in:", cwd)
+
+	// --- Create static directory structure ---
+	staticDir := filepath.Join(cwd, "static")
+	cssDir := filepath.Join(staticDir, "css")
+	faviconDir := filepath.Join(staticDir, "favicon")
+
+	createDir(staticDir)
+	createDir(cssDir)
+	createDir(faviconDir)
+
+	mainGo, _ := templates.ReadFile("templates/main.go.txt")
+	indexHTML, _ := templates.ReadFile("templates/index.html")
+
+	fmt.Println("🚀 Creating minimal Go web template in:", cwd)
+	if err := writeFileIfNotExists(filepath.Join(cwd, "main.go"), mainGo); err != nil {
+		fmt.Println("Error:", err)
 	}
-
-	args := flag.Args()
-	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "error: at least one positional argument is required")
-		flag.Usage()
-		os.Exit(2)
-	}
-
-	// Simple behavior: print args 'n' times
-	for i := 0; i < *repeat; i++ {
-		fmt.Printf("Invocation %d: %v\n", i+1, args)
+	if err := writeFileIfNotExists(filepath.Join(cwd, "index.html"), indexHTML); err != nil {
+		fmt.Println("Error:", err)
 	}
 }
