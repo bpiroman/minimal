@@ -74,6 +74,6 @@ func writeFile(filePath string, data []byte) error {
 		// os.Stat failed for a real reason (e.g., permission error), so return that error.
 		return err
 	}
-	err := os.WriteFile(filePath, []byte(data), 0o644)
+	err := os.WriteFile(filePath, data, 0o644)
 	return err
 }
