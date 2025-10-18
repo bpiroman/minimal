@@ -3,11 +3,11 @@ package main
 import (
 	"embed"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 )
 
+// create var with embed.FS type
 var templates embed.FS
 
 // createDir creates a directory if it doesn't exist
@@ -36,12 +36,12 @@ func writeFileIfNotExists(name string, content []byte) error {
 }
 
 func main() {
+	// get current working directory
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Println("error getting current working director:", err)
 		return
 	}
-	log.Println(cwd)
 
 	fmt.Println("🚀 Creating minimal Go web template in:", cwd)
 
@@ -54,14 +54,19 @@ func main() {
 	createDir(cssDir)
 	createDir(faviconDir)
 
-	mainGo, _ := templates.ReadFile("templates/main.go.txt")
-	indexHTML, _ := templates.ReadFile("templates/index.html")
-
-	fmt.Println("🚀 Creating minimal Go web template in:", cwd)
-	if err := writeFileIfNotExists(filepath.Join(cwd, "main.go"), mainGo); err != nil {
-		fmt.Println("Error:", err)
+	// read templates
+	// mainGo, _ := templates.ReadFile("templates/main.go.txt")
+	indexHTMLContent, err := templates.ReadFile("templates/index.html")
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return
 	}
-	if err := writeFileIfNotExists(filepath.Join(cwd, "index.html"), indexHTML); err != nil {
+	fmt.Println(string(indexHTMLContent))
+
+	// if err := writeFileIfNotExists(filepath.Join(cwd, "main.go"), mainGo); err != nil {
+	// 	fmt.Println("Error:", err)
+	// }
+	if err := writeFileIfNotExists(filepath.Join(cwd, "index.html"), indexHTMLContent); err != nil {
 		fmt.Println("Error:", err)
 	}
 }
