@@ -45,7 +45,7 @@ func main() {
 
 	fmt.Println("🚀 Creating minimal Go web template in:", cwd)
 
-	// --- Create static directory structure ---
+	// Create static directory folders
 	staticDir := filepath.Join(cwd, "static")
 	cssDir := filepath.Join(staticDir, "css")
 	faviconDir := filepath.Join(staticDir, "favicon")
