@@ -1,4 +1,4 @@
-# minimal
+# 🥷 Minimal - Simple HTML and CSS Web template
 minimal static website template generator using Go
 
 ## Install
