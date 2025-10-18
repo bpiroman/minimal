@@ -1,12 +1,14 @@
 package main
 
 import (
+	"embed"
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"path/filepath"
 )
+
+//go:embed templates
+var templates embed.FS
 
 // createDir creates a directory if it doesn't exist
 func createDir(path string) error {
@@ -18,27 +20,6 @@ func createDir(path string) error {
 	} else {
 		fmt.Printf("⚠️  Directory %s already exists, skipping.\n", path)
 	}
-	return nil
-}
-
-func CopyFile(src, dst string) error {
-	sourceFile, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("failed to open source file: %w", err)
-	}
-	defer sourceFile.Close() // Ensure the source file is closed
-
-	destinationFile, err := os.Create(dst)
-	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
-	}
-	defer destinationFile.Close() // Ensure the destination file is closed
-
-	_, err = io.Copy(destinationFile, sourceFile)
-	if err != nil {
-		return fmt.Errorf("failed to copy file content: %w", err)
-	}
-
 	return nil
 }
 
@@ -62,18 +43,37 @@ func main() {
 	createDir(faviconDir)
 
 	// read and copy index.html
-	err = CopyFile("templates/index.html", filepath.Join(cwd, "index.html"))
+	indexHTML, _ := templates.ReadFile("templates/index.html")
+	err = writeFile(filepath.Join(cwd, "index.html"), indexHTML)
 	if err != nil {
-		log.Fatalf("Error copying file: %v", err)
+		fmt.Println("error writing file:", err)
+		return
 	}
-	// read and copy main.go - local server
-	err = CopyFile("templates/main.go", filepath.Join(cwd, "main.go"))
+	// read and copy main.go
+	mainGO, _ := templates.ReadFile("templates/main.go")
+	err = writeFile(filepath.Join(cwd, "main.go"), mainGO)
 	if err != nil {
-		log.Fatalf("Error copying file: %v", err)
+		fmt.Println("error writing file:", err)
+		return
 	}
 	// read and copy styles.css
-	err = CopyFile("templates/styles.css", filepath.Join(cwd, "static/css/styles.css"))
+	stylesCSS, _ := templates.ReadFile("templates/styles.css")
+	err = writeFile(filepath.Join(cwd, "static/css/styles.css"), stylesCSS)
 	if err != nil {
-		log.Fatalf("Error copying file: %v", err)
+		fmt.Println("error writing file:", err)
+		return
 	}
+}
+
+func writeFile(filePath string, data []byte) error {
+	// Check if the file exists.
+	if _, err := os.Stat(filePath); err == nil {
+		// File exists, so we return nil to indicate success (a successful skip).
+		return nil
+	} else if !os.IsNotExist(err) {
+		// os.Stat failed for a real reason (e.g., permission error), so return that error.
+		return err
+	}
+	err := os.WriteFile(filePath, []byte(data), 0o644)
+	return err
 }
