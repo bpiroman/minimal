@@ -1,14 +1,12 @@
 package main
 
 import (
-	"embed"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"path/filepath"
 )
-
-// create var with embed.FS type
-var templates embed.FS
 
 // createDir creates a directory if it doesn't exist
 func createDir(path string) error {
@@ -23,15 +21,24 @@ func createDir(path string) error {
 	return nil
 }
 
-func writeFileIfNotExists(name string, content []byte) error {
-	if _, err := os.Stat(name); err == nil {
-		fmt.Printf("⚠️  %s already exists, skipping.\n", filepath.Base(name))
-		return nil
+func CopyFile(src, dst string) error {
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	if err := os.WriteFile(name, content, 0o644); err != nil {
-		return fmt.Errorf("error writing %s: %w", name, err)
+	defer sourceFile.Close() // Ensure the source file is closed
+
+	destinationFile, err := os.Create(dst)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	fmt.Printf("✅ Created %s\n", filepath.Base(name))
+	defer destinationFile.Close() // Ensure the destination file is closed
+
+	_, err = io.Copy(destinationFile, sourceFile)
+	if err != nil {
+		return fmt.Errorf("failed to copy file content: %w", err)
+	}
+
 	return nil
 }
 
@@ -54,19 +61,19 @@ func main() {
 	createDir(cssDir)
 	createDir(faviconDir)
 
-	// read templates
-	// mainGo, _ := templates.ReadFile("templates/main.go.txt")
-	indexHTMLContent, err := templates.ReadFile("templates/index.html")
+	// read and copy index.html
+	err = CopyFile("templates/index.html", filepath.Join(cwd, "index.html"))
 	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return
+		log.Fatalf("Error copying file: %v", err)
 	}
-	fmt.Println(string(indexHTMLContent))
-
-	// if err := writeFileIfNotExists(filepath.Join(cwd, "main.go"), mainGo); err != nil {
-	// 	fmt.Println("Error:", err)
-	// }
-	if err := writeFileIfNotExists(filepath.Join(cwd, "index.html"), indexHTMLContent); err != nil {
-		fmt.Println("Error:", err)
+	// read and copy main.go - local server
+	err = CopyFile("templates/main.go", filepath.Join(cwd, "main.go"))
+	if err != nil {
+		log.Fatalf("Error copying file: %v", err)
+	}
+	// read and copy styles.css
+	err = CopyFile("templates/styles.css", filepath.Join(cwd, "static/css/styles.css"))
+	if err != nil {
+		log.Fatalf("Error copying file: %v", err)
 	}
 }
